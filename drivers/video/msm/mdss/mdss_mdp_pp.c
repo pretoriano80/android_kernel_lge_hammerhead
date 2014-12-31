@@ -19,6 +19,7 @@
 #include <linux/uaccess.h>
 #include <linux/spinlock.h>
 #include <linux/delay.h>
+#include <linux/pm_runtime.h>
 #include <mach/msm_bus.h>
 #include <mach/msm_bus_board.h>
 #if defined(CONFIG_LCD_KCAL)
@@ -1661,8 +1662,6 @@ int mdss_mdp_pp_setup(struct mdss_mdp_ctl *ctl)
 	if ((!ctl->mfd) || (!mdss_pp_res))
 		return -EINVAL;
 
-	/* TODO: have some sort of reader/writer lock to prevent unclocked
-	 * access while display power is toggled */
 	mutex_lock(&ctl->lock);
 	if (!ctl->power_on) {
 		ret = -EPERM;
@@ -1687,6 +1686,13 @@ int mdss_mdp_pp_setup_locked(struct mdss_mdp_ctl *ctl)
 	bool valid_ad_panel = true;
 	if ((!ctl->mfd) || (!mdss_pp_res))
 		return -EINVAL;
+
+	ret = pm_runtime_get_sync(&ctl->mfd->pdev->dev);
+	if (IS_ERR_VALUE(ret)) {
+		pr_err("Unable to setup with pm_runtime_get_sync err = %d\n",
+									ret);
+		goto exit;
+	}
 
 	/* treat fb_num the same as block logical id*/
 	disp_num = ctl->mfd->index;
@@ -1987,7 +1993,6 @@ void mdss_mdp_pp_argc_kcal(int kr, int kg, int kb)//struct mdss_mdp_ctl *ctl,
 	pgc_config = &mdss_pp_res->pgc_disp_cfg[disp_num];
 	pgc_config->flags |= MDP_PP_OPS_WRITE;
 	pgc_config->flags |= MDP_PP_OPS_ENABLE;
-	//mdss_mdp_pp_setup(ctl);
 	mdss_pp_res->pp_disp_flags[disp_num] |= PP_FLAGS_DIRTY_PGC;
 
 	pr_info(">>>>> %s \n", __func__);
