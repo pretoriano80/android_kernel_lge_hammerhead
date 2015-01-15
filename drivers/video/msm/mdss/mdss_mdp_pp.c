@@ -1703,7 +1703,7 @@ int mdss_mdp_pp_setup_locked(struct mdss_mdp_ctl *ctl)
 		ret = -EINVAL;
 		pr_warn("Configuring post processing without mixers, err = %d",
 									ret);
-		goto exit;
+		goto err_mixer_cnt;
 	}
 	if (mdata->nad_cfgs == 0)
 		valid_mixers = false;
@@ -1739,6 +1739,9 @@ int mdss_mdp_pp_setup_locked(struct mdss_mdp_ctl *ctl)
 			mdata->ad_cfgs[disp_num].reg_sts = 0;
 	}
 	mutex_unlock(&mdss_pp_mutex);
+
+err_mixer_cnt:
+	pm_runtime_put_sync(&ctl->mfd->pdev->dev);
 exit:
 	return ret;
 }
