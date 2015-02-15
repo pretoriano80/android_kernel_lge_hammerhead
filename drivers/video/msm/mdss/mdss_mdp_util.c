@@ -698,7 +698,7 @@ int mdss_mdp_data_get(struct mdss_mdp_data *data, struct msmfb_data *planes,
 
 int mdss_mdp_data_map(struct mdss_mdp_data *data)
 {
-	int i, rc;
+	int i, rc = 0;
 
 	if (!data || !data->num_planes)
 		return -EINVAL;
